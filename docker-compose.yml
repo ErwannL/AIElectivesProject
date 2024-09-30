@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  text_reader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    entrypoint: ["python", "read_image.py"]
