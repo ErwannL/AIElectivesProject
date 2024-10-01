@@ -18,7 +18,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copie le script Python dans le conteneur
-COPY read_image.py .
+COPY scripts/read_image.py .
 
 # Définit la commande par défaut pour le conteneur
-CMD ["python", "read_image.py"]
+CMD ["python", "rotate_image.py"]

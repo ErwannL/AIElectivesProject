@@ -5,7 +5,15 @@ services:
   text_reader:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile/Dockerfile_read
     volumes:
       - .:/app
     entrypoint: ["python", "read_image.py"]
+
+  rotate:
+    build:
+      context: .
+      dockerfile: Dockerfile/Dockerfile_rotate
+    volumes:
+      - .:/app
+    entrypoint: ["python", "rotate_image.py"]

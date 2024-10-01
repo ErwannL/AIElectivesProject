@@ -16,7 +16,7 @@ def add_background(img, scale_factor=1.5):
     # Calcul des nouvelles dimensions avec une marge de sécurité
     new_height = int(height * scale_factor)
     new_width = int(width * scale_factor)
-    
+
     # Crée une image blanche de taille agrandie
     background = np.ones((new_height, new_width, 3), dtype=np.uint8) * 255
 
@@ -24,19 +24,19 @@ def add_background(img, scale_factor=1.5):
     start_y = (new_height - height) // 2
     start_x = (new_width - width) // 2
     background[start_y:start_y + height, start_x:start_x + width] = img
-    
+
     return background
 
 def correct_orientation(image_path):
     # Lis l'image avec OpenCV
     img = cv2.imread(image_path)
-    
+
     # Ajoute un fond blanc autour de l'image pour éviter le rognage
     img = add_background(img)
 
     # Convertit l'image en niveaux de gris
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    
+
     # Applique un flou pour réduire le bruit
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
 
@@ -55,24 +55,24 @@ def correct_orientation(image_path):
 
         # Calcule l'angle moyen
         median_angle = np.median(angles)
-        
+
         # Corrige l'orientation de l'image
         if median_angle != 0:
             (h, w) = img.shape[:2]
             center = (w // 2, h // 2)
             M = cv2.getRotationMatrix2D(center, median_angle, 1.0)
             img = cv2.warpAffine(img, M, (w, h))
-    
+
     # Crée le dossier 'corrected' s'il n'existe pas
     corrected_dir = "corrected"
     os.makedirs(corrected_dir, exist_ok=True)
 
     # Récupère le nom du fichier d'origine
     filename = os.path.basename(image_path)
-    
+
     # Génère le chemin du fichier corrigé
     corrected_image_path = os.path.join(corrected_dir, f"corrected_{filename}")
-    
+
     # Sauvegarde l'image corrigée
     cv2.imwrite(corrected_image_path, img)
 
