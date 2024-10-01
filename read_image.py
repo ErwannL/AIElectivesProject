@@ -3,6 +3,7 @@ import pytesseract
 from PIL import Image
 import cv2
 import numpy as np
+import os
 import sys
 
 def add_background(img, scale_factor=1.5):
@@ -62,8 +63,17 @@ def correct_orientation(image_path):
             M = cv2.getRotationMatrix2D(center, median_angle, 1.0)
             img = cv2.warpAffine(img, M, (w, h))
     
-    # Enregistre l'image corrigée
-    corrected_image_path = "corrected_image.png"
+    # Crée le dossier 'corrected' s'il n'existe pas
+    corrected_dir = "corrected"
+    os.makedirs(corrected_dir, exist_ok=True)
+
+    # Récupère le nom du fichier d'origine
+    filename = os.path.basename(image_path)
+    
+    # Génère le chemin du fichier corrigé
+    corrected_image_path = os.path.join(corrected_dir, f"corrected_{filename}")
+    
+    # Sauvegarde l'image corrigée
     cv2.imwrite(corrected_image_path, img)
 
     return corrected_image_path
