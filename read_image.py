@@ -5,10 +5,34 @@ import cv2
 import numpy as np
 import sys
 
+def add_background(img, scale_factor=1.5):
+    """
+    Ajoute un fond (padding) blanc autour de l'image pour éviter qu'elle ne soit rognée.
+    Le facteur d'échelle (scale_factor) permet d'ajuster la taille du fond.
+    """
+    height, width, _ = img.shape
+
+    # Calcul des nouvelles dimensions avec une marge de sécurité
+    new_height = int(height * scale_factor)
+    new_width = int(width * scale_factor)
+    
+    # Crée une image blanche de taille agrandie
+    background = np.ones((new_height, new_width, 3), dtype=np.uint8) * 255
+
+    # Positionne l'image au centre du nouveau fond
+    start_y = (new_height - height) // 2
+    start_x = (new_width - width) // 2
+    background[start_y:start_y + height, start_x:start_x + width] = img
+    
+    return background
+
 def correct_orientation(image_path):
     # Lis l'image avec OpenCV
     img = cv2.imread(image_path)
     
+    # Ajoute un fond blanc autour de l'image pour éviter le rognage
+    img = add_background(img)
+
     # Convertit l'image en niveaux de gris
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
