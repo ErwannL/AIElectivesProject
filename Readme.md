@@ -4,6 +4,7 @@
 This project uses Docker to manage Python scripts for reading and correcting image orientation, leveraging tools like Tesseract OCR and OpenCV. The project has two main components:
 
 Text Reader: Reads an image, corrects its orientation, and extracts text using Tesseract OCR.
+
 Image Rotator: Rotates images by a given angle without cropping them.
 
 ## Prerequisites

@@ -34,6 +34,11 @@ def rotate_image(image, angle):
     return rotated_image
 
 def main(image_path, rotation_angle):
+    # Check if the file exists
+    if not os.path.isfile(image_path):
+        print(f"Error: The file '{image_path}' does not exist.")
+        sys.exit(1)
+
     # Read the image
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
