@@ -63,13 +63,13 @@ This script rotates an image by a specified angle without cropping it.
 To rotate an image, run the following command, replacing [angle] with the desired rotation angle and [image] with the desired image:
 
 ```bash
-docker-compose run rotate [image] [angle]
+docker-compose --rm run rotate [image] [angle]
 ```
 
 For example, to rotate images/image_1.png by 28 degrees:
 
 ```bash
-docker-compose run rotate images/image_1.png 28
+docker-compose --rm run rotate images/image_1.png 28
 ```
 
 ### Text Reader
@@ -79,11 +79,11 @@ This script reads an image, corrects its orientation, and extracts text using OC
 To use it, ensure you have an image, then run the following command with Docker:
 
 ```bash
-docker-compose run text_reader [image]
+docker-compose run --rm text_reader [image]
 ```
 
 For example, to read images/image_1.png:
 
 ```bash
-docker-compose run text_reader images/image_1.png
+docker-compose run --rm text_reader images/image_1.png
 ```
