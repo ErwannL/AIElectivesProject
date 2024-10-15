@@ -10,6 +10,7 @@ Image Rotator: Rotates images by a given angle without cropping them.
 ## Prerequisites
 
 Docker
+
 Docker Compose
 
 ## Project Structure
@@ -37,7 +38,7 @@ AIElectivesProject/
 Clone this repository:
 
 ```bash
-git clone https://github.com/yourusername/AIElectivesProject.git
+git clone https://github.com/ErwannL/AIElectivesProject.git
 ```
 
 Navigate into the project directory:
