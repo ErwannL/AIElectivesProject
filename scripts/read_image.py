@@ -71,6 +71,9 @@ def correct_orientation(image_path):
     # Add a white background to avoid cropping
     img = add_background(img)
 
+    # Resize the image for better OCR results
+    img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
+
     # Convert the image to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -126,8 +129,11 @@ def read_image(image_path):
     img = Image.open(final_image_path)
 
     try:
-        # Try to extract text
-        text = pytesseract.image_to_string(img)
+        custom_config = r'--oem 3 --psm 6 -l fra+eng'  # French + English
+
+        # Run Tesseract OCR with a more flexible configuration
+        text = pytesseract.image_to_string(img, config=custom_config)
+
         # If the text is empty, skip reading
         if not text.strip():
             return "No text detected."
