@@ -5,10 +5,14 @@ FROM python:3.9-slim
 # Install Tesseract, OpenCV, and dependencies
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
+    tesseract-ocr-fra \
     libtesseract-dev \
     libopencv-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Set the TESSDATA_PREFIX environment variable
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata/
 
 # Set the working directory
 WORKDIR /app

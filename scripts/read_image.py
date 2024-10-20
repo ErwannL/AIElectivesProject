@@ -1,169 +1,78 @@
-
-import pytesseract
-from PIL import Image
 import cv2
-import numpy as np
-import os
+import pytesseract
 import sys
-import re
 
-def check_orientation_with_tesseract(image_path):
+def preprocess_image_for_ocr(image_path):
     """
-    Checks the orientation of the image using Tesseract's OS detection.
-    Returns the corrected image if orientation is wrong, or the original image if no correction is needed.
+    Preprocess the image for better OCR results.
+    Applies grayscale, thresholding, and resizing.
     """
-    img = cv2.imread(image_path)
-
-    try:
-        # Get the OS (Orientation and Script Detection) information
-        osd = pytesseract.image_to_osd(img)
-
-        # Extract the rotation angle
-        rotation_angle = int(re.search(r"(?<=Rotate: )\d+", osd).group(0))
-
-        # Correct the orientation if needed
-        if rotation_angle != 0:
-            (h, w) = img.shape[:2]
-            center = (w // 2, h // 2)
-            M = cv2.getRotationMatrix2D(center, -rotation_angle, 1.0)
-            img = cv2.warpAffine(img, M, (w, h))
-
-            # Save the re-corrected image
-            corrected_dir = "corrected"
-            os.makedirs(corrected_dir, exist_ok=True)
-            corrected_image_path = os.path.join(corrected_dir, f"corrected_{os.path.basename(image_path)}")
-            cv2.imwrite(corrected_image_path, img)
-
-            return corrected_image_path
-
-    except pytesseract.TesseractError as e:
-        # Handle the case where Tesseract cannot process the image
-        return image_path
-
-    # If no correction is needed, return the original path
-    return image_path
-
-def add_background(img, scale_factor=1.5):
-    """
-    Adds a white background (padding) around the image to avoid cropping.
-    The scale_factor allows you to adjust the size of the background.
-    """
-    height, width, _ = img.shape
-
-    # Calculate new dimensions with a safety margin
-    new_height = int(height * scale_factor)
-    new_width = int(width * scale_factor)
-
-    # Create a white image of the enlarged size
-    background = np.ones((new_height, new_width, 3), dtype=np.uint8) * 255
-
-    # Center the image on the new background
-    start_y = (new_height - height) // 2
-    start_x = (new_width - width) // 2
-    background[start_y:start_y + height, start_x:start_x + width] = img
-
-    return background
-
-def correct_orientation(image_path):
     # Read the image with OpenCV
     img = cv2.imread(image_path)
 
-    # Add a white background to avoid cropping
-    img = add_background(img)
-
-    # Resize the image for better OCR results
-    img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
-
-    # Convert the image to grayscale
+    # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # Apply blur to reduce noise
-    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    # Apply adaptive thresholding to binarize the image
+    gray = cv2.adaptiveThreshold(
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+    )
 
-    # Detect edges
-    edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+    # Resize the image to increase OCR accuracy
+    gray = cv2.resize(gray, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
 
-    # Find lines in the image
-    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=100, minLineLength=100, maxLineGap=10)
+    # Save the preprocessed image
+    preprocessed_image_path = "preprocessed_image.png"
+    cv2.imwrite(preprocessed_image_path, gray)
 
-    if lines is not None:
-        angles = []
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            angle = np.arctan2(y2 - y1, x2 - x1) * 180.0 / np.pi
-            angles.append(angle)
+    return preprocessed_image_path
 
-        # Calculate the median angle
-        median_angle = np.median(angles)
+def extract_rpps_area(image_path):
+    """
+    Extract the area of the image containing the RPPS code for more focused OCR.
+    This is based on the assumption that RPPS/FRPP numbers are typically in the top-right.
+    """
+    # Read the image
+    img = cv2.imread(image_path)
 
-        # Correct the image orientation
-        if median_angle != 0:
-            (h, w) = img.shape[:2]
-            center = (w // 2, h // 2)
-            M = cv2.getRotationMatrix2D(center, median_angle, 1.0)
-            img = cv2.warpAffine(img, M, (w, h))
+    # Define the area where the RPPS/FRPP code typically resides (tune these values if needed)
+    h, w = img.shape[:2]
+    top_right_corner = img[0:int(h*0.2), int(w*0.7):w]  # Top 20% height, right 30% width
 
-    # Create 'corrected' folder if it doesn't exist
-    corrected_dir = "corrected"
-    os.makedirs(corrected_dir, exist_ok=True)
+    # Save the extracted area for RPPS/FRPP detection
+    rpps_image_path = "rpps_extracted.png"
+    cv2.imwrite(rpps_image_path, top_right_corner)
 
-    # Get the original filename
-    filename = os.path.basename(image_path)
+    return rpps_image_path
 
-    # Generate the corrected image path
-    corrected_image_path = os.path.join(corrected_dir, f"corrected_{filename}")
+def extract_text_from_image(image_path):
+    """
+    Main function to extract text from the image, focusing on FRPP and RPPS codes.
+    """
+    # Preprocess the entire image for better OCR
+    preprocessed_image_path = preprocess_image_for_ocr(image_path)
 
-    # Save the corrected image
-    cv2.imwrite(corrected_image_path, img)
+    # Run Tesseract on the preprocessed full image to extract all text
+    custom_config = r'--oem 3 --psm 6 -l fra'  # Adjust for French language and dense text
+    full_text = pytesseract.image_to_string(preprocessed_image_path, config=custom_config)
 
-    return corrected_image_path
+    print("Extracted text from the full image:")
+    print(full_text)
 
-def read_image(image_path):
-    # Correct the image orientation with line detection
-    corrected_image_path = correct_orientation(image_path)
+    # Extract the RPPS/FRPP area for more focused detection
+    rpps_image_path = extract_rpps_area(image_path)
 
-    # Check orientation with Tesseract and further correct if necessary
-    final_image_path = check_orientation_with_tesseract(corrected_image_path)
+    # Preprocess the extracted RPPS/FRPP area
+    preprocessed_rpps_image_path = preprocess_image_for_ocr(rpps_image_path)
 
-    # Open the final corrected image
-    img = Image.open(final_image_path)
+    # Run Tesseract on the preprocessed RPPS/FRPP area
+    rpps_text = pytesseract.image_to_string(preprocessed_rpps_image_path, config=custom_config)
 
-    try:
-        custom_config = r'--oem 3 --psm 6 -l fra+eng'  # French + English
+    print("\nExtracted RPPS/FRPP text from the specific area:")
+    print(rpps_text)
 
-        # Run Tesseract OCR with a more flexible configuration
-        text = pytesseract.image_to_string(img, config=custom_config)
+    return full_text, rpps_text
 
-        # If the text is empty, skip reading
-        if not text.strip():
-            return "No text detected."
-
-    except pytesseract.TesseractError as e:
-        # Skip if Tesseract cannot process the image
-        return "No text could be extracted from the image."
-
-    return text
-
-def main(image_path):
-    # Check if the file exists
-    if not os.path.isfile(image_path):
-        print(f"Error: The file '{image_path}' does not exist.")
-        sys.exit(1)
-
-    # If the file exists, process the image
-    text = read_image(image_path)
-
-    # Print the extracted text or the no text message
-    if text == "No text detected." or text == "No text could be extracted from the image.":
-        print(text)
-    else:
-        print("Extracted text from the image:")
-        print(text)
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python read_image.py <image_path>")
-        sys.exit(1)
-
-    image_path = sys.argv[1]
-    main(image_path)
+# Example usage
+image_path = sys.argv[1]
+full_text, rpps_text = extract_text_from_image(image_path)
