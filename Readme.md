@@ -64,13 +64,13 @@ This script rotates an image by a specified angle without cropping it.
 To rotate an image, run the following command, replacing [angle] with the desired rotation angle and [image] with the desired image:
 
 ```bash
-docker-compose --rm run rotate [image] [angle]
+docker-compose run -rm rotate [image] [angle]
 ```
 
 For example, to rotate images/image_1.png by 28 degrees:
 
 ```bash
-docker-compose --rm run rotate images/image_1.png 28
+docker-compose run -rm rotate images/image_1.png 28
 ```
 
 ### Text Reader
