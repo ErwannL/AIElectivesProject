@@ -4,7 +4,7 @@ import os
 import sys
 
 # Function to rotate an image without cropping
-def rotate_image(image, angle):
+def rotate_image(image, angle):  # sourcery skip: assign-if-exp
     (h, w) = image.shape[:2]
     center = (w // 2, h // 2)
 
@@ -30,8 +30,16 @@ def rotate_image(image, angle):
     M[1, 2] += new_h / 2 - center[1]
 
     # Apply the rotation and get the rotated image
-    rotated_image = cv2.warpAffine(image, M, (new_w, new_h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-    return rotated_image
+    return cv2.warpAffine(
+        image,
+        M,
+        (
+            new_w,
+            new_h
+        ),
+        flags=cv2.INTER_CUBIC,
+        borderMode=cv2.BORDER_REPLICATE
+    )
 
 def main(image_path, rotation_angle):
     # Check if the file exists
